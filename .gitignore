@@ -29,3 +29,8 @@ desktop.ini
 
 # Gemini / Antigravity
 .gemini/
+
+# Database and Models
+*.db
+*.joblib
+output/*.png

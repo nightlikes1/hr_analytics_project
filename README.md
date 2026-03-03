@@ -20,7 +20,10 @@ hr_analytics upgraded/
 ├── hr_eda.py                # Adım 1 – Keşifsel Veri Analizi (EDA)
 ├── hr_visualization.py      # Adım 2 – Veri Görselleştirme (4 grafik)
 ├── hr_preprocessing.py      # Adım 3 – Veri Ön İşleme
-├── hr_model_rf.py           # Adım 4 – Random Forest Modeli
+├── hr_model_rf.py           # Adım 4 – Random Forest Modeli (Baseline)
+├── hr_model_advanced.py     # Adım 5 – XGBoost + SMOTE + Optuna (Advanced)
+├── hr_database_setup.py     # Adım 6 – SQLite Veritabanı Entegrasyonu
+├── hr_dashboard.py          # Adım 7 – Streamlit Dashboard (What-If & SHAP)
 ├── requirements.txt         # Python bağımlılıkları
 └── README.md                # Proje dokümantasyonu
 ```
@@ -86,8 +89,17 @@ python hr_visualization.py
 # Adım 3: Veri Ön İşleme
 python hr_preprocessing.py
 
-# Adım 4: Random Forest Modeli
+# Adım 4: Random Forest Modeli (Baseline)
 python hr_model_rf.py
+
+# Adım 5: Gelişmiş Model (Eğitim ve Kaydetme)
+python hr_model_advanced.py
+
+# Adım 6: Veritabanı Kurulumu
+python hr_database_setup.py
+
+# Adım 7: Dashboard Başlatma
+streamlit run hr_dashboard.py
 ```
 
 > **Not:** `hr_model_rf.py`, ön işlenmiş veri setini (`data/hr_attrition_preprocessed.csv`) kullanır. Bu dosyanın oluşturulması için önce `hr_preprocessing.py` scriptinin çalıştırılması gerekir.
@@ -142,6 +154,32 @@ Makine öğrenmesi modeli için veriyi hazırlar:
 
 **Çıktı:** `output/feature_importance_top5.png`
 
+### Adım 5 – İleri Seviye Model (`hr_model_advanced.py`)
+
+Dengesiz veri ve düşük recall sorununu çözmeye yönelik ileri seviye teknikler:
+
+- ✅ **SMOTE:** Dengesiz veri setini dengelemek için azınlık sınıfını (Ayrılan) sentetik olarak artırma.
+- ✅ **XGBoost:** Gradient Boosting algoritması ile daha güçlü tahminleme.
+- ✅ **Optuna:** Hiperparametrelerin (n_estimators, max_depth, learning_rate vb.) otomatik optimizasyonu.
+- ✅ **Cross-Validation:** Stratified K-Fold ile hata payını minimize etme.
+
+**Çıktı:** `output/advanced_model_features.png` ve `output/advanced_xgb_model.joblib`
+
+### Adım 6 – Veritabanı Entegrasyonu (`hr_database_setup.py`)
+
+Veri yönetimini profesyonelleştirmek için CSV verileri bir SQLite veritabanına aktarılır:
+- ✅ `hr_analytics.db` veritabanı oluşturulur.
+- ✅ `employees` tablosuna tüm kayıtlar indexlenir.
+
+### Adım 7 – İnteraktif HR Analytics Dashboard (`hr_dashboard.py`)
+
+Projenin en üst katmanı olan kapsamlı yönetim paneli:
+- 📁 **Veri Portalı:** Dışarıdan yeni CSV dosyaları yükleyerek toplu tahmin alabilme.
+- 🏥 **Departman Analizi:** Heatmap'ler ile en riskli departman ve yaş gruplarını tespit etme.
+- 🔮 **What-If & Finansal Etki:** Çalışan özelinde simülasyon ve ayrılmanın şirkete maliyeti (Replacement Cost).
+- 🤖 **AI Danışman (Gemini):** Veriler hakkında doğal dilde soru sorup stratejik yanıtlar alma.
+- 🔍 **SHAP Açıklanabilirliği:** Model kararlarının arkasındaki nedenleri teknik görselleştirme.
+
 ---
 
 ## 📈 Model Sonuçları
@@ -161,12 +199,12 @@ Makine öğrenmesi modeli için veriyi hazırlar:
 
 ### Performans Metrikleri (Test Verisi – 294 Örnek)
 
-| Metrik | Skor |
-|--------|:----:|
-| **Accuracy (Doğruluk)** | 0.8265 |
-| **Precision** | 0.3750 |
-| **Recall** | 0.1277 |
-| **F1-Score** | 0.1905 |
+| Metrik | Model (RF) | Model (XGB+SMOTE) | Gelişim |
+|--------|:----------:|:-----------------:|:-------:|
+| **Accuracy** | 0.8265 | 0.8537 | +%3.3 |
+| **Precision** | 0.3750 | 0.5556 | +%48 |
+| **Recall** | 0.1277 | 0.4255 | **+%233** |
+| **F1-Score** | 0.1905 | 0.4819 | **+%153** |
 
 ### Confusion Matrix
 
