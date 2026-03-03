@@ -1,31 +1,51 @@
-# 📊 IBM HR Analytics – Çalışan Ayrılma Analizi
+# 📊 IBM HR Analytics – İleri Seviye Çalışan Ayrılma ve Performans Analizi
 
-> **IBM HR Analytics Employee Attrition & Performance** veri seti üzerinde uçtan uca veri bilimi projesi: Keşifsel Veri Analizi (EDA), Görselleştirme, Veri Ön İşleme ve Makine Öğrenmesi ile çalışan ayrılma tahmini.
+> **IBM HR Analytics Employee Attrition & Performance** veri seti üzerinde uçtan uca modern bir veri bilimi ve İK analitiği projesi.
+> Proje, makine öğrenmesi (XGBoost, Random Forest) tabanlı tahmin modeli, yerel veritabanı entegrasyonu ve kapsamlı, modüler bir Streamlit dashboard'u sunmaktadır.
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Proje Yapısı ve Modüler Mimari
+
+Proje, maintainability (bakım kolaylığı) ve ölçeklenebilirlik prensipleriyle `src` modülü altında yeniden yapılandırılmıştır:
 
 ```
-hr_analytics upgraded/
+hr_analytics_advanced/
 │
 ├── data/
-│   ├── WA_Fn-UseC_-HR-Employee-Attrition.csv   # Orijinal veri seti (1470 x 35)
-│   └── hr_attrition_preprocessed.csv            # Ön işlenmiş veri seti (1470 x 46)
+│   ├── WA_Fn-UseC_-HR-Employee-Attrition.csv   # Orijinal veri seti
+│   ├── hr_attrition_preprocessed.csv           # Temel ön-işleme çıktısı
+│   └── hr_attrition_preprocessed_v2.csv        # Gelişmiş özellik mühendisliği (v2) çıktısı
 │
-├── output/
-│   ├── attrition_analysis.png                   # 4'lü görselleştirme paneli
-│   └── feature_importance_top5.png              # En önemli 5 özellik bar chart
+├── hr_analytics.db               # SQLite Yerel Veritabanı
 │
-├── hr_eda.py                # Adım 1 – Keşifsel Veri Analizi (EDA)
-├── hr_visualization.py      # Adım 2 – Veri Görselleştirme (4 grafik)
-├── hr_preprocessing.py      # Adım 3 – Veri Ön İşleme
-├── hr_model_rf.py           # Adım 4 – Random Forest Modeli (Baseline)
-├── hr_model_advanced.py     # Adım 5 – XGBoost + SMOTE + Optuna (Advanced)
-├── hr_database_setup.py     # Adım 6 – SQLite Veritabanı Entegrasyonu
-├── hr_dashboard.py          # Adım 7 – Streamlit Dashboard (What-If & SHAP)
-├── requirements.txt         # Python bağımlılıkları
-└── README.md                # Proje dokümantasyonu
+├── src/                          # Çekirdek Uygulama Modülleri
+│   ├── database/                 # Veritabanı yönetim işlevleri
+│   │   └── engine.py             # DB bağlantısı ve CRUD operasyonları
+│   ├── models/                   # Makine öğrenmesi servisleri
+│   │   └── predictor.py          # Model yükleme ve tahminleme servisi
+│   ├── reports/                  # Raporlama ve çıktı servisleri
+│   │   └── pdf_generator.py      # PDF simülasyon raporu oluşturucu
+│   └── utils/                    # Yardımcı modüller ve matematiksel hesaplamalar
+│       └── hr_math.py            # Finansal kayıp ve ROI hesaplamaları
+│
+├── tests/                        # Birim (Unit) Testleri
+│   └── test_hr_math.py           # İK finansal işlemlerinin testleri
+│
+├── Çalıştırılabilir Scriptler    # Bağımsız Çalışan Ana Scriptler
+│   ├── hr_eda.py                 # Keşifsel Veri Analizi
+│   ├── hr_visualization.py       # Statik Görselleştirme Raporu
+│   ├── hr_preprocessing.py       # Veri Ön İşleme (v1)
+│   ├── hr_preprocessing_v2.py    # Gelişmiş Özellik Mühendisliği (v2)
+│   ├── hr_model_rf.py            # Random Forest Baseline Model Eğitimi
+│   ├── hr_model_advanced.py      # XGBoost + SMOTE Model Eğitimi
+│   ├── hr_model_advanced_v2.py   # Versiyon 2 Pipeline Model Eğitimi
+│   ├── hr_database_setup.py      # Veritabanı (SQLite) Kurulum ve Enjeksiyonu
+│   └── hr_dashboard.py           # Kapsamlı Streamlit Web Arayüzü
+│
+├── output/                       # Oluşturulan modeller (.joblib) ve grafik çıktıları
+├── requirements.txt              # Proje bağımlılıkları
+└── README.md                     # Proje dokümantasyonu (Bu dosya)
 ```
 
 ---
@@ -36,232 +56,103 @@ hr_analytics upgraded/
 |-------|-------|
 | **Kaynak** | IBM HR Analytics Employee Attrition & Performance |
 | **Satır Sayısı** | 1.470 çalışan |
-| **Sütun Sayısı** | 35 özellik |
+| **Sütun Sayısı** | 35 özellik (Özellik mühendisliği ile artırıldı) |
 | **Hedef Değişken** | `Attrition` (Yes / No) |
-| **Eksik Veri** | Yok (0 null) |
 | **Sınıf Dağılımı** | %83.9 Kalan (No) – %16.1 Ayrılan (Yes) |
-
-### Önemli Özellikler
-
-| Özellik | Açıklama |
-|---------|----------|
-| `Age` | Çalışan yaşı |
-| `MonthlyIncome` | Aylık gelir ($) |
-| `OverTime` | Fazla mesai durumu (Yes/No) |
-| `TotalWorkingYears` | Toplam çalışma yılı |
-| `DailyRate` | Günlük ücret |
-| `JobSatisfaction` | İş memnuniyeti (1-4) |
-| `YearsAtCompany` | Şirketteki çalışma yılı |
-| `DistanceFromHome` | Eve uzaklık (km) |
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma
+## 🚀 Yeni Streamlit Dashboard Özellikleri
 
-### Gereksinimler
+Model sonuçlarını gerçek hayata entegre etmeyi sağlayan `hr_dashboard.py` aşağıdaki modülleri içerir:
 
-```
-Python 3.8+
-pandas
-numpy
-matplotlib
-seaborn
-scikit-learn
-```
+1. **🏠 Karşılama & Uyarılar:** Tüm personeli tarayarak kritik/yüksek kaçış riski olanları anında uyaran genel bakış ekranı.
+2. **📁 Veri Portalı:** Toplu yeni CSV verilerini yükleyerek anında risk sonuçlarını indirme özelliği.
+3. **🏥 Departman Analizi:** Isı haritaları (Heatmap), Ağaç haritaları (Treemap) ve hiyerarşik raporlarla departman ve rol bazlı risk tespiti.
+4. **📊 9-Box Yetenek Matrisi:** Çalışan potansiyeli ve risk skorlarını geleneksel 9-Box metoduyla ızgaralar halinde sunan yetenek yönetimi analiz ekranı.
+5. **🔮 Tahmin & What-If:** Çalışanın maaşı, rolü veya mesai durumu gibi şartları değiştirildiğinde, ayrılma riskinin nasıl değişeceğini anlık gösteren interaktif simülatör (Gauge grafikleri ile).
+6. **💰 Müdahale & ROI Analizi:** Bir çalışana verilecek ek maaş, mentorluk gibi "Müdahale Paketlerinin" yatırım getirisini (ROI) ve şirkete sağlayacağı tasarrufu Waterfall (şelale) grafikleri ile hesaplama.
+7. **👯 Çalışan Kıyaslama:** İki farklı çalışanı aynı anda yan yana getiren, **8-boyutlu radar grafikleri** ve doğrudan farklılık göstergeleri içeren derinlemesine detay ekranı.
+8. **🤖 Strateji Uzmanı:** Maaş, Memnuniyet, İş-Yaşam Dengesi, Mesai gibi alt boyutların geneline dair istatistikleri doğrudan model bazlı yorumlayan özet analiz sayfası.
+9. **🔍 Model Şeffaflığı (SHAP):** Yapay zeka tahminlerinin hangi değişkenler tarafından ("Neden bu çalışan %80 riskli?") ne kadar etkilendiğini anlatan SHAP açıklanabilirlik raporları.
 
-### Kütüphanelerin Yüklenmesi
+---
+
+## 🛠️ Kurulum ve Çalıştırma
+
+### 1. Gereksinimler
+
+Sisteminizde `Python 3.8+` yüklü olmalıdır.
 
 ```bash
+# Gerekli bağımlılıkların kurulumu:
 pip install -r requirements.txt
 ```
 
-### Scriptlerin Sırasıyla Çalıştırılması
+### 2. Pipeline'ın (Adımların) Çalıştırılması
 
-Proje 4 adımdan oluşur. Scriptler sırasıyla çalıştırılmalıdır:
+Ön işleme, model eğitimi ve veritabanı adımlarını çalıştırmak için aşağıdaki sırayı izleyebilirsiniz:
 
 ```bash
-# Adım 1: Keşifsel Veri Analizi
-python hr_eda.py
+# Adım 1: Veri Ön İşleme (V2 özellik mühendisliği dahil)
+python hr_preprocessing_v2.py
 
-# Adım 2: Veri Görselleştirme
-python hr_visualization.py
+# Adım 2: Model Eğitimleri (XGBoost veya Random Forest)
+python hr_model_advanced_v2.py
 
-# Adım 3: Veri Ön İşleme
-python hr_preprocessing.py
-
-# Adım 4: Random Forest Modeli (Baseline)
-python hr_model_rf.py
-
-# Adım 5: Gelişmiş Model (Eğitim ve Kaydetme)
-python hr_model_advanced.py
-
-# Adım 6: Veritabanı Kurulumu
+# Adım 3: SQLite Veritabanını Doldurma (Çalışan Envanteri)
 python hr_database_setup.py
+```
 
-# Adım 7: Dashboard Başlatma
+### 3. Dashboard'u Başlatma
+
+Ana uygulamayı başlatmak için:
+```bash
 streamlit run hr_dashboard.py
 ```
 
-> **Not:** `hr_model_rf.py`, ön işlenmiş veri setini (`data/hr_attrition_preprocessed.csv`) kullanır. Bu dosyanın oluşturulması için önce `hr_preprocessing.py` scriptinin çalıştırılması gerekir.
+### 4. Testleri Çalıştırma
 
----
-
-## 📑 Proje Adımları
-
-### Adım 1 – Keşifsel Veri Analizi (`hr_eda.py`)
-
-Veri setini tanımaya yönelik temel istatistiksel analiz adımlarını içerir:
-
-- ✅ Veri setinin yüklenmesi ve boyutunun kontrolü
-- ✅ İlk 5 satırın incelenmesi
-- ✅ Veri tiplerinin listelenmesi (sayısal vs kategorik)
-- ✅ Eksik veri (null) kontrolü
-- ✅ Sayısal sütunlar için temel istatistikler (mean, std, min, max)
-- ✅ Kategorik sütunlar için frekans analizi
-
-### Adım 2 – Veri Görselleştirme (`hr_visualization.py`)
-
-4 farklı grafik ile işten ayrılma analizini görselleştirir:
-
-| # | Grafik | Tür | Bulgu |
-|---|--------|-----|-------|
-| 1 | İşten Ayrılma Genel Oranı | Pie Chart | %16.1 ayrılma oranı |
-| 2 | Aylık Gelir vs Ayrılma | Boxplot | Düşük gelirli çalışanlar daha yatkın |
-| 3 | Fazla Mesai vs Ayrılma | Countplot | Fazla mesaicilerde ~3x daha yüksek oran |
-| 4 | Yaş Dağılımı vs Ayrılma | Histogram | Genç çalışanlarda (25-35) yüksek oran |
-
-**Çıktı:** `output/attrition_analysis.png`
-
-### Adım 3 – Veri Ön İşleme (`hr_preprocessing.py`)
-
-Makine öğrenmesi modeli için veriyi hazırlar:
-
-- ✅ Varyansı sıfır olan sütunların çıkarılması (`EmployeeCount`, `Over18`, `StandardHours`)
-- ✅ `Attrition` hedef değişkeninin sayısal dönüşümü (Yes=1, No=0)
-- ✅ Kategorik değişkenlere One-Hot Encoding uygulanması (`drop_first=True`)
-- ✅ İşlenmiş verinin CSV olarak kaydedilmesi
-
-**Çıktı:** `data/hr_attrition_preprocessed.csv` (1470 satır × 46 sütun)
-
-### Adım 4 – Random Forest Modeli (`hr_model_rf.py`)
-
-Çalışan ayrılma tahmini için makine öğrenmesi modeli:
-
-- ✅ Veri %80 eğitim / %20 test olarak bölünme (stratified)
-- ✅ Random Forest Classifier modeli kurulması ve eğitilmesi
-- ✅ Test verisi üzerinde performans metriklerinin raporlanması
-- ✅ En önemli 5 özelliğin (Feature Importance) bar chart olarak çizilmesi
-
-**Çıktı:** `output/feature_importance_top5.png`
-
-### Adım 5 – İleri Seviye Model (`hr_model_advanced.py`)
-
-Dengesiz veri ve düşük recall sorununu çözmeye yönelik ileri seviye teknikler:
-
-- ✅ **SMOTE:** Dengesiz veri setini dengelemek için azınlık sınıfını (Ayrılan) sentetik olarak artırma.
-- ✅ **XGBoost:** Gradient Boosting algoritması ile daha güçlü tahminleme.
-- ✅ **Optuna:** Hiperparametrelerin (n_estimators, max_depth, learning_rate vb.) otomatik optimizasyonu.
-- ✅ **Cross-Validation:** Stratified K-Fold ile hata payını minimize etme.
-
-**Çıktı:** `output/advanced_model_features.png` ve `output/advanced_xgb_model.joblib`
-
-### Adım 6 – Veritabanı Entegrasyonu (`hr_database_setup.py`)
-
-Veri yönetimini profesyonelleştirmek için CSV verileri bir SQLite veritabanına aktarılır:
-- ✅ `hr_analytics.db` veritabanı oluşturulur.
-- ✅ `employees` tablosuna tüm kayıtlar indexlenir.
-
-### Adım 7 – İnteraktif HR Analytics Dashboard (`hr_dashboard.py`)
-
-Projenin en üst katmanı olan kapsamlı yönetim paneli:
-- 📁 **Veri Portalı:** Dışarıdan yeni CSV dosyaları yükleyerek toplu tahmin alabilme.
-- 🏥 **Departman Analizi:** Heatmap'ler ile en riskli departman ve yaş gruplarını tespit etme.
-- 🔮 **What-If & Finansal Etki:** Çalışan özelinde simülasyon ve ayrılmanın şirkete maliyeti (Replacement Cost).
-- 🤖 **AI Danışman (Gemini):** Veriler hakkında doğal dilde soru sorup stratejik yanıtlar alma.
-- 🔍 **SHAP Açıklanabilirliği:** Model kararlarının arkasındaki nedenleri teknik görselleştirme.
+Kod bütünlüğünü (finansal metrik hesaplamaları vb.) doğrulamak için TDD kapsamında yazılmış testleri çalıştırabilirsiniz:
+```bash
+pytest
+```
 
 ---
 
 ## 📈 Model Sonuçları
 
-### Model Konfigürasyonu
+Gelişmiş modellerde sentetik veri dengelenmesi (SMOTE) ve özellik mühendisliği (v2 Pipeline) ile özellikle ayrılan sınıfı tespit etmedeki **Recall** skorları dramatik oranda artırılmıştır. Modeller hyperparameter tuning için **Optuna** kullanılarak optimize edilmiştir.
 
-| Parametre | Değer |
-|-----------|-------|
-| Algoritma | Random Forest Classifier |
-| Ağaç Sayısı (`n_estimators`) | 200 |
-| Maksimum Derinlik (`max_depth`) | 15 |
-| `min_samples_split` | 5 |
-| `min_samples_leaf` | 2 |
-| `class_weight` | balanced |
-| Eğitim / Test Oranı | %80 / %20 |
-| `random_state` | 42 |
+### Temel Özellik Önem Skorları (SHAP & Feature Importance)
 
-### Performans Metrikleri (Test Verisi – 294 Örnek)
-
-| Metrik | Model (RF) | Model (XGB+SMOTE) | Gelişim |
-|--------|:----------:|:-----------------:|:-------:|
-| **Accuracy** | 0.8265 | 0.8537 | +%3.3 |
-| **Precision** | 0.3750 | 0.5556 | +%48 |
-| **Recall** | 0.1277 | 0.4255 | **+%233** |
-| **F1-Score** | 0.1905 | 0.4819 | **+%153** |
-
-### Confusion Matrix
-
-|  | Tahmin: 0 (Kalan) | Tahmin: 1 (Ayrılan) |
-|--|:------------------:|:--------------------:|
-| **Gerçek: 0 (Kalan)** | 237 | 10 |
-| **Gerçek: 1 (Ayrılan)** | 41 | 6 |
-
-### En Önemli 5 Özellik (Feature Importance)
-
-| Sıra | Özellik | Önem Skoru | Anlamı |
-|:----:|---------|:----------:|--------|
-| 1 | `MonthlyIncome` | 0.0665 | Aylık gelir |
-| 2 | `Age` | 0.0635 | Yaş |
-| 3 | `TotalWorkingYears` | 0.0510 | Toplam çalışma yılı |
-| 4 | `DailyRate` | 0.0487 | Günlük ücret |
-| 5 | `OverTime_Yes` | 0.0473 | Fazla mesai yapma durumu |
+Modelin bir çalışanın ayrılmasında rol oynayan en kritik bulduğu etkenler:
+1. **Aylık Gelir (MonthlyIncome)**
+2. **Fazla Mesai (OverTime)**
+3. **Toplam Çalışma Yılları (TotalWorkingYears)**
+4. **Yaş (Age)**
+5. **Günlük Ücret (DailyRate)**
 
 ---
 
-## 💡 Temel Bulgular ve İK Önerileri
-
-### Bulgular
-
-1. **Düşük Maaş:** Ayrılan çalışanların medyan geliri, kalanlardan belirgin şekilde düşüktür.
-2. **Fazla Mesai:** Fazla mesai yapan çalışanlarda ayrılma oranı ~3 kat daha fazladır.
-3. **Genç Yaş:** 25-35 yaş arası çalışanlar en yüksek ayrılma oranına sahiptir.
-
-### Stratejik Öneriler
-
-| # | Strateji | Hedef | Beklenen Etki |
-|---|----------|-------|---------------|
-| 1 | **Rekabetçi Ücret İyileştirmesi** – Piyasa araştırmasına dayalı kademeli maaş artışı ve performans primi | Düşük Maaş | Maaş kaynaklı ayrılmalarda %25-35 azalma |
-| 2 | **Fazla Mesai Yönetimi** – İzleme dashboard'u, esnek çalışma modeli, TOIL (izin karşılığı) uygulaması | Fazla Mesai | Fazla mesai saatlerinde %30-40 azalma |
-| 3 | **Genç Çalışan Bağlılık Programı** – Mentor atanması, kariyer gelişim planı, eğitim bütçesi, departman rotasyonu | Genç Yaş | Genç çalışan ayrılmasında %20-30 azalma |
-
----
-
-## 🛠️ Kullanılan Teknolojiler
+## 🛠️ Kullanılan Teknolojiler ve Kütüphaneler
 
 | Teknoloji | Kullanım Alanı |
 |-----------|----------------|
-| **Python 3** | Ana programlama dili |
-| **Pandas** | Veri manipülasyonu ve analiz |
-| **NumPy** | Sayısal hesaplamalar |
-| **Matplotlib** | Grafik ve görselleştirme |
-| **Seaborn** | İstatistiksel görselleştirme |
-| **Scikit-learn** | Makine öğrenmesi (Random Forest, train/test split, metrikler) |
-
----
-
-## 📄 Lisans
-
-Bu proje eğitim ve analiz amaçlıdır. Veri seti IBM tarafından Kaggle üzerinden paylaşılmıştır.
+| **Python** | Çekirdek dil |
+| **Streamlit** | Web arayüzü ve Dashboard inşası |
+| **Scikit-learn & XGBoost** | Makine Öğrenmesi (Pipeline, Random Forest, Gradient Boosting) |
+| **Imbalanced-learn (SMOTE)** | Dengesiz veri setleri sentezleme |
+| **Optuna** | Hyperparameter Tuning |
+| **Pandas & NumPy** | Veri yapılandırması ve işlemleri |
+| **Plotly & Seaborn** | Etkileşimli (interaktif) ve istatistiksel grafikler |
+| **SHAP** | Explainable AI (Model Şeffaflığı) |
+| **SQLite (SQLAlchemy)** | Yerel veritabanı entegrasyonu |
+| **Pytest** | Birim Testleri |
+| **FPDF2** | Dinamik Rapor (PDF) Üretimi |
 
 ---
 
 <p align="center">
-  <i>Hazırlayan: Hasan Yiğit Doğanay | Mart 2026</i>
+  <i>Hazırlayan: Hasan Yiğit Doğanay | Güncelleme: 2026</i>
 </p>
